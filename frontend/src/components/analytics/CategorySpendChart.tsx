@@ -146,7 +146,8 @@ export function CategorySpendChart({
               paddingAngle={2}
               strokeWidth={0}
               onClick={(item) => {
-                const category = item.category as string | undefined;
+                const category =
+                  typeof item.name === "string" ? item.name : undefined;
 
                 onCategorySelect(
                   selectedCategory === category ? undefined : category,

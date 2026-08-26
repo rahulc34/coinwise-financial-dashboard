@@ -4,7 +4,7 @@ import {
   CreditCard,
   Gift,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CategorySpendChart } from "./components/analytics/CategorySpendChart";
 
 import { DashboardLayout } from "./components/layout/DashboardLayout";
@@ -12,6 +12,7 @@ import { Card } from "./components/ui/Card";
 import { Skeleton } from "./components/ui/Skeleton";
 import { useWalletBalance } from "./hook/useRewards";
 import { TransactionsSection } from "./components/transactions/TransactionsSection";
+import { RewardsSection } from "./components/rewards/RewardsSection";
 
 const summaryCards = [
   {
@@ -36,6 +37,26 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
     undefined,
   );
+  const [showRewards, setShowRewards] = useState(false);
+  const rewardsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showRewards) {
+      return;
+    }
+
+    rewardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [showRewards]);
+
+  function openRewards() {
+    if (showRewards) {
+      rewardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    setShowRewards(true);
+  }
+
   return (
     <DashboardLayout
       coinBalance={wallet?.coin_balance}
@@ -76,7 +97,20 @@ function App() {
           </Card>
         ))}
 
-        <Card className="overflow-hidden border-coin-100 bg-gradient-to-br from-coin-50 to-white p-5">
+        <Card
+          role="button"
+          tabIndex={0}
+          aria-expanded={showRewards}
+          aria-controls="rewards-section"
+          className="cursor-pointer overflow-hidden border-coin-100 bg-gradient-to-br from-coin-50 to-white p-5 text-left transition hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coin-600"
+          onClick={openRewards}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openRewards();
+            }
+          }}
+        >
           <div className="flex h-full flex-col justify-between">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-coin-100 text-coin-600">
               <Gift aria-hidden="true" className="h-5 w-5" />
@@ -105,36 +139,13 @@ function App() {
           selectedCategory={selectedCategory}
           onCategorySelect={setSelectedCategory}
         />
-        <Card className="min-h-[420px] p-5">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-heading">
-              Recent transactions
-            </h2>
-
-            <p className="mt-1 text-sm text-body">
-              Your transaction table will appear here.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 border-b border-border pb-4"
-              >
-                <Skeleton className="h-10 w-10 rounded-xl" />
-
-                <div className="min-w-0 flex-1">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="mt-2 h-3 w-20" />
-                </div>
-
-                <Skeleton className="h-5 w-20" />
-              </div>
-            ))}
-          </div>
-        </Card>
       </section>
+
+      {showRewards ? (
+        <div id="rewards-section" ref={rewardsRef}>
+          <RewardsSection />
+        </div>
+      ) : null}
     </DashboardLayout>
   );
 }
