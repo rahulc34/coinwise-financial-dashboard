@@ -134,20 +134,6 @@ function App() {
             ))}
           </div>
         </Card>
-
-        <Card className="min-h-[420px] p-5">
-          <h2 className="text-lg font-bold text-heading">
-            Spending by category
-          </h2>
-
-          <p className="mt-1 text-sm text-body">
-            Your analytics chart will appear here.
-          </p>
-
-          <div className="flex h-72 items-center justify-center">
-            <Skeleton className="h-52 w-52 rounded-full" />
-          </div>
-        </Card>
       </section>
     </DashboardLayout>
   );
