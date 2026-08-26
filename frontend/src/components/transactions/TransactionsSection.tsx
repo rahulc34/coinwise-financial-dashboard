@@ -1,0 +1,86 @@
+import { useState } from "react";
+
+import { useTransactions } from "../../hook/useTransactions";
+import type {
+  SortField,
+  Transaction,
+  TransactionFilters,
+} from "../../types/transaction";
+import { Card } from "../ui/Card";
+import { Pagination } from "./Pagination";
+import { TransactionTable } from "./TransactionTable";
+
+const initialFilters: TransactionFilters = {
+  page: 1,
+  pageSize: 50,
+  sortBy: "date",
+  sortOrder: "desc",
+};
+
+export function TransactionsSection() {
+  const [filters, setFilters] = useState<TransactionFilters>(initialFilters);
+
+  const { data, isLoading, isFetching, isError, refetch } =
+    useTransactions(filters);
+
+  function handleSort(field: SortField) {
+    setFilters((current) => ({
+      ...current,
+      page: 1,
+      sortBy: field,
+      sortOrder:
+        current.sortBy === field && current.sortOrder === "desc"
+          ? "asc"
+          : "desc",
+    }));
+  }
+
+  function handleRowClick(transaction: Transaction) {
+    console.log("Selected transaction:", transaction);
+  }
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center justify-between gap-4 px-5 py-5">
+        <div>
+          <h2 className="text-lg font-bold text-heading">Transactions</h2>
+
+          <p className="mt-1 text-sm text-body">
+            Search, filter and review your payment history.
+          </p>
+        </div>
+
+        {isFetching && !isLoading && (
+          <span className="text-xs font-medium text-brand-700">Updating…</span>
+        )}
+      </div>
+
+      <TransactionTable
+        transactions={data?.items ?? []}
+        loading={isLoading}
+        error={isError}
+        sortBy={filters.sortBy}
+        sortOrder={filters.sortOrder}
+        onSort={handleSort}
+        onRetry={() => void refetch()}
+        onRowClick={handleRowClick}
+      />
+
+      {data && (
+        <Pagination
+          page={data.pagination.page}
+          pageSize={data.pagination.page_size}
+          totalItems={data.pagination.total_items}
+          totalPages={data.pagination.total_pages}
+          disabled={isFetching}
+          onPageChange={(page) => {
+            setFilters((current) => ({
+              ...current,
+              page,
+            }));
+          }}
+        />
+      )}
+    </Card>
+  );
+}
