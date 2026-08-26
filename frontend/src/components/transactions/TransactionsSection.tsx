@@ -23,10 +23,19 @@ const initialFilters: TransactionFilters = {
   sortOrder: "desc",
 };
 
-export function TransactionsSection() {
+interface TransactionsSectionProps {
+  category?: string;
+  onCategoryChange: (category: string | undefined) => void;
+}
+
+export function TransactionsSection({
+  category,
+  onCategoryChange,
+}: TransactionsSectionProps) {
   const [filters, setFilters] = useState<TransactionFilters>(initialFilters);
 
   const [searchText, setSearchText] = useState("");
+
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
 
@@ -45,6 +54,14 @@ export function TransactionsSection() {
     }));
   }, [debouncedSearch]);
 
+  useEffect(() => {
+    setFilters((current) => ({
+      ...current,
+      page: 1,
+      category,
+    }));
+  }, [category]);
+
   function handleSort(field: SortField) {
     setFilters((current) => ({
       ...current,
@@ -57,9 +74,18 @@ export function TransactionsSection() {
     }));
   }
 
+  function handleFiltersChange(nextFilters: TransactionFilters) {
+    setFilters(nextFilters);
+
+    if (nextFilters.category !== category) {
+      onCategoryChange(nextFilters.category);
+    }
+  }
+
   function resetFilters() {
     setSearchText("");
     setFilters(initialFilters);
+    onCategoryChange(undefined);
   }
 
   return (
@@ -86,7 +112,7 @@ export function TransactionsSection() {
           metadata={metadata}
           searchText={searchText}
           onSearchChange={setSearchText}
-          onFiltersChange={setFilters}
+          onFiltersChange={handleFiltersChange}
           onReset={resetFilters}
         />
 

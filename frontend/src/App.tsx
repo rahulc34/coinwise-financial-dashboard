@@ -4,6 +4,8 @@ import {
   CreditCard,
   Gift,
 } from "lucide-react";
+import { useState } from "react";
+import { CategorySpendChart } from "./components/analytics/CategorySpendChart";
 
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { Card } from "./components/ui/Card";
@@ -31,7 +33,9 @@ const summaryCards = [
 
 function App() {
   const { data: wallet, isLoading: isBalanceLoading } = useWalletBalance();
-
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
+    undefined,
+  );
   return (
     <DashboardLayout
       coinBalance={wallet?.coin_balance}
@@ -92,7 +96,15 @@ function App() {
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <TransactionsSection />
+        <TransactionsSection
+          category={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+        />
+
+        <CategorySpendChart
+          selectedCategory={selectedCategory}
+          onCategorySelect={setSelectedCategory}
+        />
         <Card className="min-h-[420px] p-5">
           <div className="mb-6">
             <h2 className="text-lg font-bold text-heading">
