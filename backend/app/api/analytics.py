@@ -8,9 +8,11 @@ from backend.app.db.connection import (
 )
 from backend.app.schemas.analytics import (
     CategoryAnalyticsResponse,
+    AnalyticsSummaryResponse
 )
 from backend.app.services.analytics_service import (
     retrieve_category_analytics,
+    retrieve_analytics_summary
 )
 
 
@@ -33,3 +35,17 @@ def get_categories(
     result = retrieve_category_analytics(connection)
 
     return CategoryAnalyticsResponse(**result)
+
+@router.get(
+    "/summary",
+    response_model=AnalyticsSummaryResponse,
+)
+def get_summary(
+    connection: Annotated[
+        Connection,
+        Depends(get_database_connection),
+    ],
+) -> AnalyticsSummaryResponse:
+    result = retrieve_analytics_summary(connection)
+
+    return AnalyticsSummaryResponse(**result)
