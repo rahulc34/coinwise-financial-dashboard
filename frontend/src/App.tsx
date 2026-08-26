@@ -12,28 +12,6 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
     undefined,
   );
-  const [showRewards, setShowRewards] = useState(false);
-  const rewardsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showRewards) {
-      return;
-    }
-
-    rewardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [showRewards]);
-
-  function openRewards() {
-    if (showRewards) {
-      rewardsRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      return;
-    }
-
-    setShowRewards(true);
-  }
 
   return (
     <DashboardLayout
@@ -69,11 +47,7 @@ function App() {
         />
       </section>
 
-      {showRewards ? (
-        <div id="rewards-section" ref={rewardsRef}>
-          <RewardsSection />
-        </div>
-      ) : null}
+      <RewardsSection />
     </DashboardLayout>
   );
 }
