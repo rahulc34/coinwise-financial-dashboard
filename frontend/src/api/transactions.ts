@@ -24,8 +24,16 @@ export function fetchTransactions(filters: TransactionFilters) {
   addParameter(parameters, "search", filters.search);
   addParameter(parameters, "category", filters.category);
   addParameter(parameters, "status", filters.status);
-  addParameter(parameters, "date_from", filters.dateFrom);
-  addParameter(parameters, "date_to", filters.dateTo);
+  addParameter(
+    parameters,
+    "date_from",
+    filters.dateFrom ? `${filters.dateFrom}T00:00:00Z` : undefined,
+  );
+  addParameter(
+    parameters,
+    "date_to",
+    filters.dateTo ? `${filters.dateTo}T23:59:59.999Z` : undefined,
+  );
   addParameter(parameters, "amount_min", filters.amountMin);
   addParameter(parameters, "amount_max", filters.amountMax);
   addParameter(parameters, "sort_by", filters.sortBy);

@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { useTransactions } from "../../hook/useTransactions";
+import { useDebounce } from "../../hook/useDebounce";
+import {
+  useTransactionMetadata,
+  useTransactions,
+} from "../../hook/useTransactions";
 import type {
   SortField,
   Transaction,
@@ -8,6 +12,8 @@ import type {
 } from "../../types/transaction";
 import { Card } from "../ui/Card";
 import { Pagination } from "./Pagination";
+import { TransactionDetailModal } from "./TransactionDetailModal";
+import { TransactionFilterBar } from "./TransactionFilterBar";
 import { TransactionTable } from "./TransactionTable";
 
 const initialFilters: TransactionFilters = {
@@ -20,8 +26,24 @@ const initialFilters: TransactionFilters = {
 export function TransactionsSection() {
   const [filters, setFilters] = useState<TransactionFilters>(initialFilters);
 
+  const [searchText, setSearchText] = useState("");
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
+
+  const debouncedSearch = useDebounce(searchText, 350);
+
   const { data, isLoading, isFetching, isError, refetch } =
     useTransactions(filters);
+
+  const { data: metadata } = useTransactionMetadata();
+
+  useEffect(() => {
+    setFilters((current) => ({
+      ...current,
+      page: 1,
+      search: debouncedSearch.trim() || undefined,
+    }));
+  }, [debouncedSearch]);
 
   function handleSort(field: SortField) {
     setFilters((current) => ({
@@ -35,52 +57,73 @@ export function TransactionsSection() {
     }));
   }
 
-  function handleRowClick(transaction: Transaction) {
-    console.log("Selected transaction:", transaction);
+  function resetFilters() {
+    setSearchText("");
+    setFilters(initialFilters);
   }
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-5 py-5">
-        <div>
-          <h2 className="text-lg font-bold text-heading">Transactions</h2>
+    <>
+      <Card className="overflow-hidden">
+        <div className="flex items-center justify-between gap-4 px-5 py-5">
+          <div>
+            <h2 className="text-lg font-bold text-heading">Transactions</h2>
 
-          <p className="mt-1 text-sm text-body">
-            Search, filter and review your payment history.
-          </p>
+            <p className="mt-1 text-sm text-body">
+              Search, filter and review your payment history.
+            </p>
+          </div>
+
+          {isFetching && !isLoading && (
+            <span role="status" className="text-xs font-medium text-brand-700">
+              Updating…
+            </span>
+          )}
         </div>
 
-        {isFetching && !isLoading && (
-          <span className="text-xs font-medium text-brand-700">Updating…</span>
-        )}
-      </div>
-
-      <TransactionTable
-        transactions={data?.items ?? []}
-        loading={isLoading}
-        error={isError}
-        sortBy={filters.sortBy}
-        sortOrder={filters.sortOrder}
-        onSort={handleSort}
-        onRetry={() => void refetch()}
-        onRowClick={handleRowClick}
-      />
-
-      {data && (
-        <Pagination
-          page={data.pagination.page}
-          pageSize={data.pagination.page_size}
-          totalItems={data.pagination.total_items}
-          totalPages={data.pagination.total_pages}
-          disabled={isFetching}
-          onPageChange={(page) => {
-            setFilters((current) => ({
-              ...current,
-              page,
-            }));
-          }}
+        <TransactionFilterBar
+          filters={filters}
+          metadata={metadata}
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          onFiltersChange={setFilters}
+          onReset={resetFilters}
         />
-      )}
-    </Card>
+
+        <TransactionTable
+          transactions={data?.items ?? []}
+          loading={isLoading}
+          error={isError}
+          sortBy={filters.sortBy}
+          sortOrder={filters.sortOrder}
+          onSort={handleSort}
+          onRetry={() => void refetch()}
+          onRowClick={setSelectedTransaction}
+        />
+
+        {data && (
+          <Pagination
+            page={data.pagination.page}
+            pageSize={data.pagination.page_size}
+            totalItems={data.pagination.total_items}
+            totalPages={data.pagination.total_pages}
+            disabled={isFetching}
+            onPageChange={(page) => {
+              setFilters((current) => ({
+                ...current,
+                page,
+              }));
+            }}
+          />
+        )}
+      </Card>
+
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        onClose={() => {
+          setSelectedTransaction(null);
+        }}
+      />
+    </>
   );
 }
